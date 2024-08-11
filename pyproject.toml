@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=69.5.1"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "s-sonar"
+version = "0.0.1"
+requires-python = ">=3.11.9"
+
+[project.optional-dependencies]
+dev = ["ruff"]
+test = ["pytest"]
+
+[tool.pytest.ini_options]
+minversion = "6.0"
+pythonpath = "src"
+addopts = "--import-mode=importlib -ra -q"
+testpaths = ["tests"]
+
+[tool.ruff]
+extend-exclude = ["*.pyc", "__pycache__"]
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]
