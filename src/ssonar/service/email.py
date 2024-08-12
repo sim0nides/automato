@@ -8,21 +8,6 @@ class EmailService(Protocol):
     def send_email(self, to_address: str, body: str) -> None: ...
 
 
-__service: EmailService | None = None
-
-
-def register_email_service(service: EmailService):
-    global __service
-    __service = service
-
-
-def get_email_service() -> EmailService:
-    if not __service:
-        raise NotImplementedError("call register_email_service()")
-
-    return __service
-
-
 class SMTPEmailService(EmailService):
     def __init__(self, host: str, port: int, user: str, password: str) -> None:
         self.host = host

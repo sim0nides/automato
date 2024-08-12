@@ -13,6 +13,14 @@ class BaseRunner(ABC):
 
         self.delay_sec = delay_sec
 
+    @property
+    def is_running(self) -> bool:
+        return self.__run
+
+    @abstractmethod
+    def job(self) -> None:
+        pass
+
     def __sleep(self, execution_time: float) -> None:
         sleep_time = self.delay_sec - execution_time
 
@@ -32,12 +40,7 @@ class BaseRunner(ABC):
                 print(e)
 
             exec_time = time.perf_counter() - start_time
-            print(f"Elapsed time: {exec_time}")
             self.__sleep(exec_time)
 
     def stop(self) -> None:
         self.__run = False
-
-    @abstractmethod
-    def job(self) -> None:
-        pass

@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from email.message import EmailMessage
 from typing import Optional, Protocol
 
-from .service.email import get_email_service
+from .service.email import EmailService
 
 
 class INotifiable(Protocol):
@@ -26,7 +26,24 @@ class Notifiable:
         raise NotImplementedError("get_mail_receiver method not implemented!")
 
 
-class EmailNotification(ABC):
+class NotificationWithService:
+    __service: EmailService | None = None
+
+    @classmethod
+    def set_email_service(cls, service: EmailService):
+        cls.__service = service
+
+    @classmethod
+    def get_email_service(cls) -> EmailService:
+        if cls.__service is None:
+            raise ValueError(
+                "EmailService is not set! Call <Class>.set_email_service()"
+            )
+
+        return cls.__service
+
+
+class EmailNotification(NotificationWithService, ABC):
     @abstractmethod
     def get_mail(self) -> Mail:
         pass
@@ -50,7 +67,7 @@ class EmailNotification(ABC):
         return e_msg.as_string()
 
     def send(self, notifiable: INotifiable):
-        email_service = get_email_service()
+        email_service = EmailNotification.get_email_service()
         message_string = self._construct_email_message(
             notifiable, email_service.from_addr
         )
