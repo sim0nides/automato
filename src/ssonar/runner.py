@@ -65,7 +65,7 @@ class BaseRunnerWithConsumer(BaseRunner, Generic[Task]):
         pass
 
     def _consumer(self) -> None:
-        while self._run:
+        while True:
             try:
                 task = self._queue.get(timeout=0.1)
 

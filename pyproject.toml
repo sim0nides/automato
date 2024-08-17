@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "s-sonar"
-version = "0.2.0"
+version = "0.2.1"
 description = "Monitoring utils and helpers"
 authors = ["Unknown"]
 readme = "README.md"
