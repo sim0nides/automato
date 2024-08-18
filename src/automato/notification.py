@@ -3,7 +3,7 @@ from dataclasses import dataclass
 from email.message import EmailMessage
 from typing import Optional, Protocol
 
-from .service.email import EmailService
+from automato.service.email import EmailService
 
 
 class INotifiable(Protocol):

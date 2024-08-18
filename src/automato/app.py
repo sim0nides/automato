@@ -1,33 +1,46 @@
+import logging
 import queue
 import signal
 import time
+from functools import cached_property
 from threading import Lock, Thread
 from typing import Callable, Generic, TypeVar
 
+from automato.logging import create_logger
+
 _SLEEP_STEP = 0.1
+_DEFAULT_DELAY_SEC = 10
 
 _T = TypeVar("_T")
-_JobFunc = Callable[[], _T]
+_JobFunc = Callable[[], None]
 _TaskFunc = Callable[[_T], None]
 
 
-class Automato(Generic[_T]):
-    def __init__(self, delay_sec: float) -> None:
+class Automato:
+    _run: bool = False
+    _job: _JobFunc | None = None
+
+    def __init__(
+        self, delay_sec: float = _DEFAULT_DELAY_SEC, debug: bool = False
+    ) -> None:
         if delay_sec < 0:
             raise ValueError("Min delay_sec value is 0")
 
-        self._run: bool = False
         self._delay_sec: float = delay_sec
-        self._job: _JobFunc[_T] | None = None
+        self._debug: bool = debug
 
         signal.signal(signal.SIGTERM, self._handle_signal)
         signal.signal(signal.SIGINT, self._handle_signal)
+
+    @cached_property
+    def logger(self) -> logging.Logger:
+        return create_logger(self._debug)
 
     @property
     def is_running(self) -> bool:
         return self._run
 
-    def job(self, func: _JobFunc[_T]):
+    def job(self, func: _JobFunc):
         """Decorator to register job function"""
         self._job = func
 
@@ -41,10 +54,12 @@ class Automato(Generic[_T]):
             time.sleep(_SLEEP_STEP)
             sleep_time -= _SLEEP_STEP
 
-    def _run_job(self) -> _T:
-        return self._job()  # type: ignore
+    def _handle_job(self) -> None:
+        self._job()  # type: ignore
 
     def start(self) -> None:
+        self.logger.info("Start")
+
         if self._job is None:
             raise ValueError("Job is not registered")
 
@@ -54,26 +69,26 @@ class Automato(Generic[_T]):
             start_time = time.perf_counter()
 
             try:
-                self._run_job()
-            except Exception as e:
-                print(e)
+                self._handle_job()
+            except Exception:
+                self.logger.exception("Job failed")
 
             exec_time = time.perf_counter() - start_time
             self._sleep(exec_time)
 
     def stop(self) -> None:
-        print("Stop")
+        self.logger.info("Stop")
         self._run = False
 
 
-class AutomatoWithTasks(Automato[_T]):
+class AutomatoWithTasks(Automato, Generic[_T]):
     _stop_signal = object()
 
-    def __init__(self, *args, **kw) -> None:
-        super().__init__(*args, **kw)
-        self._lock: Lock = Lock()
-        self._queue: queue.Queue[_T | object] = queue.Queue()
-        self._task: _TaskFunc[_T] | None = None
+    _lock: Lock = Lock()
+
+    _task: _TaskFunc[_T] | None = None
+
+    _queue: queue.Queue[_T | object] = queue.Queue()
 
     @property
     def lock(self):
@@ -96,14 +111,10 @@ class AutomatoWithTasks(Automato[_T]):
                 self._queue.task_done()
             except queue.Empty:
                 pass
-            except Exception as e:
-                print(e)
+            except Exception:
+                self.logger.exception("Unexpected error in consumer")
 
-    def _run_job(self):
-        result = self._job()  # type: ignore
-        self._put_to_queue(result)
-
-    def _put_to_queue(self, task: _T) -> None:
+    def to_consumer(self, task: _T) -> None:
         self._queue.put(task)
 
     def start(self) -> None:
