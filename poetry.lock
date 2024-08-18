@@ -89,6 +89,16 @@ files = [
 colors = ["colorama (>=0.4.6)"]
 
 [[package]]
+name = "logging"
+version = "0.4.9.6"
+description = "A logging module for Python"
+optional = false
+python-versions = "*"
+files = [
+    {file = "logging-0.4.9.6.tar.gz", hash = "sha256:26f6b50773f085042d301085bd1bf5d9f3735704db9f37c1ce6d8b85c38f2417"},
+]
+
+[[package]]
 name = "nodeenv"
 version = "1.9.1"
 description = "Node.js virtual environment builder"
@@ -291,4 +301,4 @@ test = ["covdefaults (>=2.3)", "coverage (>=7.2.7)", "coverage-enable-subprocess
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "670efedb1b763273d87a4b615ffade195b7062eb47f699b5ad55e788ff3d893c"
+content-hash = "e7775182c437bc6ca7876bba45fd7ec9fd7aa1866eb8fd93f2ef3679a1f029d5"

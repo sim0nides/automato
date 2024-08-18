@@ -8,6 +8,7 @@ packages = [{include = "automato", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
+logging = "^0.4.9.6"
 
 [tool.poetry.group.dev.dependencies]
 ruff = "^0.5.7"
