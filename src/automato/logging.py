@@ -6,7 +6,7 @@ default_handler.setFormatter(
 )
 
 
-def create_logger(debug: bool = False) -> logging.Logger:
+def create_logger(debug: bool | None = None) -> logging.Logger:
     logger = logging.getLogger()
 
     if debug:

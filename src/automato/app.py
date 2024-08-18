@@ -21,13 +21,13 @@ class Automato:
     _job: _JobFunc | None = None
 
     def __init__(
-        self, delay_sec: float = _DEFAULT_DELAY_SEC, debug: bool = False
+        self, delay_sec: float = _DEFAULT_DELAY_SEC, debug: bool | None = False
     ) -> None:
         if delay_sec < 0:
             raise ValueError("Min delay_sec value is 0")
 
         self._delay_sec: float = delay_sec
-        self._debug: bool = debug
+        self._debug: bool | None = debug
 
         signal.signal(signal.SIGTERM, self._handle_signal)
         signal.signal(signal.SIGINT, self._handle_signal)
