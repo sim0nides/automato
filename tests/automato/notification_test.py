@@ -1,6 +1,6 @@
 import pytest
 
-from ssonar.notification import Mail, NotificationWithService
+from automato.notification import Mail, NotificationWithService
 
 
 class TestMail:

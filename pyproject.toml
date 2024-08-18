@@ -1,10 +1,10 @@
 [tool.poetry]
-name = "s-sonar"
-version = "0.2.1"
-description = "Monitoring utils and helpers"
+name = "automato"
+version = "1.0.0"
+description = "Unknown"
 authors = ["Unknown"]
 readme = "README.md"
-packages = [{include = "ssonar", from = "src"}]
+packages = [{include = "automato", from = "src"}]
 
 [tool.poetry.dependencies]
 python = "^3.11"
