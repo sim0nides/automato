@@ -4,21 +4,21 @@ import time
 from threading import Lock, Thread
 from typing import Callable, Generic, TypeVar
 
-SLEEP_STEP = 0.1
+_SLEEP_STEP = 0.1
 
-T = TypeVar("T")
-JobFunc = Callable[[], T]
-TaskFunc = Callable[[T], None]
+_T = TypeVar("_T")
+_JobFunc = Callable[[], _T]
+_TaskFunc = Callable[[_T], None]
 
 
-class Runner(Generic[T]):
+class Automato(Generic[_T]):
     def __init__(self, delay_sec: float) -> None:
         if delay_sec < 0:
             raise ValueError("Min delay_sec value is 0")
 
         self._run: bool = False
         self._delay_sec: float = delay_sec
-        self._job: JobFunc[T] | None = None
+        self._job: _JobFunc[_T] | None = None
 
         signal.signal(signal.SIGTERM, self._handle_signal)
         signal.signal(signal.SIGINT, self._handle_signal)
@@ -27,7 +27,7 @@ class Runner(Generic[T]):
     def is_running(self) -> bool:
         return self._run
 
-    def job(self, func: JobFunc[T]):
+    def job(self, func: _JobFunc[_T]):
         """Decorator to register job function"""
         self._job = func
 
@@ -38,10 +38,10 @@ class Runner(Generic[T]):
         sleep_time = self._delay_sec - execution_time
 
         while self.is_running and sleep_time > 0:
-            time.sleep(SLEEP_STEP)
-            sleep_time -= SLEEP_STEP
+            time.sleep(_SLEEP_STEP)
+            sleep_time -= _SLEEP_STEP
 
-    def _run_job(self) -> T:
+    def _run_job(self) -> _T:
         return self._job()  # type: ignore
 
     def start(self) -> None:
@@ -66,20 +66,20 @@ class Runner(Generic[T]):
         self._run = False
 
 
-class RunnerWithTasks(Runner[T]):
+class AutomatoWithTasks(Automato[_T]):
     _stop_signal = object()
 
     def __init__(self, *args, **kw) -> None:
         super().__init__(*args, **kw)
         self._lock: Lock = Lock()
-        self._queue: queue.Queue[T | object] = queue.Queue()
-        self._task: TaskFunc[T] | None = None
+        self._queue: queue.Queue[_T | object] = queue.Queue()
+        self._task: _TaskFunc[_T] | None = None
 
     @property
     def lock(self):
         return self._lock
 
-    def task(self, func: TaskFunc[T]) -> None:
+    def task(self, func: _TaskFunc[_T]) -> None:
         """Decorator to register task function"""
         self._task = func
 
@@ -88,7 +88,7 @@ class RunnerWithTasks(Runner[T]):
             try:
                 task = self._queue.get(timeout=0.1)
 
-                if task is RunnerWithTasks._stop_signal:
+                if task is AutomatoWithTasks._stop_signal:
                     self._queue.task_done()
                     break
 
@@ -103,7 +103,7 @@ class RunnerWithTasks(Runner[T]):
         result = self._job()  # type: ignore
         self._put_to_queue(result)
 
-    def _put_to_queue(self, task: T) -> None:
+    def _put_to_queue(self, task: _T) -> None:
         self._queue.put(task)
 
     def start(self) -> None:
@@ -117,4 +117,4 @@ class RunnerWithTasks(Runner[T]):
 
     def stop(self) -> None:
         super().stop()
-        self._queue.put(RunnerWithTasks._stop_signal)
+        self._queue.put(AutomatoWithTasks._stop_signal)
