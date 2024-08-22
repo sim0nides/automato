@@ -26,21 +26,14 @@ class Notifiable:
         raise NotImplementedError("get_mail_receiver method not implemented!")
 
 
+@dataclass
 class NotificationWithService:
-    __service: EmailService | None = None
+    def __init__(self, service: EmailService) -> None:
+        self.__service: EmailService = service
 
-    @classmethod
-    def set_email_service(cls, service: EmailService):
-        cls.__service = service
-
-    @classmethod
-    def get_email_service(cls) -> EmailService:
-        if cls.__service is None:
-            raise ValueError(
-                "EmailService is not set! Call <Class>.set_email_service()"
-            )
-
-        return cls.__service
+    @property
+    def _service(self) -> EmailService:
+        return self.__service
 
 
 class EmailNotification(NotificationWithService, ABC):
@@ -67,8 +60,8 @@ class EmailNotification(NotificationWithService, ABC):
         return e_msg.as_string()
 
     def send(self, notifiable: INotifiable):
-        email_service = EmailNotification.get_email_service()
         message_string = self._construct_email_message(
-            notifiable, email_service.from_addr
+            notifiable, self._service.from_addr
         )
-        email_service.send_email(notifiable.get_mail_receiver(), message_string)
+
+        self._service.send_email(notifiable.get_mail_receiver(), message_string)
