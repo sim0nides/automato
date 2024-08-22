@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from email.message import EmailMessage
-from typing import Optional, Protocol
+from typing import Generic, Optional, Protocol, TypeVar
 
 from automato.service.email import EmailService
 
@@ -12,6 +12,9 @@ class INotifiable(Protocol):
 
 class INotification(Protocol):
     def send(self, notifiable: INotifiable): ...
+
+
+_T = TypeVar("_T", bound=INotifiable)
 
 
 @dataclass
@@ -36,15 +39,13 @@ class NotificationWithService:
         return self.__service
 
 
-class EmailNotification(NotificationWithService, ABC):
+class EmailNotification(NotificationWithService, ABC, Generic[_T]):
     @abstractmethod
-    def get_mail(self) -> Mail:
+    def get_mail(self, notifiable: _T) -> Mail:
         pass
 
-    def _construct_email_message(
-        self, notifiable: INotifiable, from_address: str
-    ) -> str:
-        mail = self.get_mail()
+    def _construct_email_message(self, notifiable: _T, from_address: str) -> str:
+        mail = self.get_mail(notifiable)
 
         e_msg = EmailMessage()
         e_msg["From"] = from_address
@@ -59,7 +60,7 @@ class EmailNotification(NotificationWithService, ABC):
 
         return e_msg.as_string()
 
-    def send(self, notifiable: INotifiable):
+    def send(self, notifiable: _T):
         message_string = self._construct_email_message(
             notifiable, self._service.from_addr
         )
